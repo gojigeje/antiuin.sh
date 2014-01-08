@@ -1,8 +1,8 @@
 #!/bin/bash
 # ----------------------------------------------------------------------------------
 # @name    : antiuin.sh
-# @version : 0.1
-# @date    : 29/12/2013 13:09:56
+# @version : 0.2
+# @date    : 08/01/2014 11:21:36
 #
 # TENTANG
 # ----------------------------------------------------------------------------------
@@ -18,9 +18,11 @@
 #     - Fallback mode. Berguna ketika offline atau situs AnTIuin gagal diakses, akan
 #       menampikan isi judul dan tanggal dari cache yg udah tersimpan sebelumnya.
 #
+# versi 0.2 - 08/01/2014 11:21:36
+#     - ADD: Opsi untuk membatasi jumlah feed yang hendak ditampilkan.
+#
 # TODO
 # ----------------------------------------------------------------------------------
-#  - Opsi untuk membatasi jumlah judul yang ditampilkan.
 #  - Trim judul yang panjang, biar rapi.
 #  - Support conky.
 #
@@ -44,7 +46,7 @@
 # Tidak perlu mengubah setting/variabel apa-apa, cukup di-run saja :)
 # ----------------------------------------------------------------------------------
 setup() {
-   VERSI="0.1 #29/12/2013"
+   VERSI="0.2 #08/01/2014"
    me="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
    TMPDIR="$HOME/gojigeje"
    TMPFILE="$TMPDIR/.antiuin.tmp"
@@ -111,14 +113,21 @@ display_normal() {
             echo "[OK]"
             combine
             echo "------------------------------------------------------------------"
-            cat $READFILE
+            case "$1" in
+               1|2|3|4|5)
+                  cat $READFILE | head -n $1
+               ;;
+               *)
+                  cat $READFILE
+               ;;
+            esac
             echo "------------------------------------------------------------------"
          else
             if $FALLBACK ; then
                echo "[FAILED!]"
                echo "- Menampilkan feed yang lama.."
                echo "------------------------------------------------------------------"
-               display_fallback
+               display_fallback $1
                echo "------------------------------------------------------------------"
             else
                echo "[FAILED!]"
@@ -131,7 +140,7 @@ display_normal() {
             echo "[FAILED!]"
             echo "- Menampilkan feed yang lama.."
             echo "------------------------------------------------------------------"
-            display_fallback
+            display_fallback $1
             echo "------------------------------------------------------------------"
          else
             echo "[FAILED!]"
@@ -144,7 +153,7 @@ display_normal() {
          echo "[FAILED!]"
          echo "- Menampilkan feed yang lama.."
          echo "------------------------------------------------------------------"
-         display_fallback
+         display_fallback $1
          echo "------------------------------------------------------------------"
       else
          echo "[FAILED!]"
@@ -161,24 +170,31 @@ display_quiet() {
          cekfile
          if $FILEOK ; then
             combine
-            cat $READFILE
+            case "$1" in
+               1|2|3|4|5)
+                  cat $READFILE | head -n $1
+               ;;
+               *)
+                  cat $READFILE
+               ;;
+            esac
          else
             if $FALLBACK ; then
-               display_fallback
+               display_fallback $1
             else
                exit
             fi
          fi
       else
          if $FALLBACK ; then
-            display_fallback
+            display_fallback $1
          else
             exit
          fi
       fi
    else
       if $FALLBACK ; then
-         display_fallback
+         display_fallback $1
       else
          exit
       fi
@@ -186,7 +202,14 @@ display_quiet() {
 }
 
 display_fallback() {
-   cat $READFILE
+   case "$1" in
+      1|2|3|4|5)
+         cat $READFILE | head -n $1
+      ;;
+      *)
+         cat $READFILE
+      ;;
+   esac
 }
 
 fallback() {
@@ -204,11 +227,13 @@ usage() {
    version
    echo "------------------------------------------------------------------"
    echo ""
-   echo "  Usage:       $me <action>"
+   echo "  Usage:       $me <action> <limit>"
    echo ""
    echo "  Action:      cek            Cek feed AnTIuin terbaru (verbose)"
    echo "               quiet | -q     Cek feed AnTIuin terbaru (quiet)"
    echo "               read | cache   Tampilkan feed lama (cache)"
+   echo ""
+   echo "  Limit:       1-5            Jumlah feed yang ditampilkan"
    echo ""
 }
 
@@ -223,17 +248,17 @@ setup
 case "$1" in
    "cek"|"-c" )
       cek_koneksi
-      display_normal
+      display_normal $2
       cleanup
    ;;
    "conky"|"-q"|"quiet" )
       fallback
       cek_koneksi
-      display_quiet
+      display_quiet $2
       cleanup 
    ;;
    "read"|"cache" )
-      display_fallback
+      display_fallback $2
    ;;
    *)
       usage
