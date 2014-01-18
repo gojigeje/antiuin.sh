@@ -23,7 +23,6 @@
 #
 # TODO
 # ----------------------------------------------------------------------------------
-#  - Trim judul yang panjang, biar rapi.
 #  - Support conky.
 #
 # KONTAK
